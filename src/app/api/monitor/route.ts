@@ -7,11 +7,13 @@ export const maxDuration = 300; // 5 min — the Mind can take up to 2 min to re
 
 // POST: Run a new monitoring session (called by Vercel Cron or manually)
 export async function POST(request: NextRequest) {
+  // Auth: if CRON_SECRET is set, require Bearer token. If not set, allow all (demo mode).
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    if (process.env.NODE_ENV !== "development") {
+  if (cronSecret) {
+    const trimmedSecret = cronSecret.trim();
+    if (authHeader !== `Bearer ${trimmedSecret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
