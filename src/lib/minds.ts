@@ -11,6 +11,14 @@ import { createMindsClient, type MindsClient, type MessageRecord } from "@animoc
  *
  * The conversation alias is stable across monitoring runs — this is what gives
  * the Mind continuity. The Mind's getHistory() is the memory.
+ *
+ * SPIKE FINDINGS (2026-08-25):
+ * - The Mind takes 40-120s to reply. waitForReply with 60s timeout is unreliable.
+ * - Use a polling approach: send message, then poll getHistory until a new Mind reply appears.
+ * - The Mind returns HTML (<p> tags) in replies — strip them.
+ * - The Mind has genuine personality and pushes back on prescriptive prompts.
+ * - The Mind's conversation history IS the persistence — it remembers across sessions.
+ * - Cognition balance: 182.44 credits (sufficient for the demo).
  */
 
 const MIND_ID = process.env.MINDS_MIND_ID!;
@@ -33,7 +41,6 @@ export function getMindsClient(): MindsClient {
 
 /**
  * Ensure the monitoring conversation exists (creates it on first run, reuses on subsequent).
- * The Mind's persistent memory is tied to this conversation alias.
  */
 export async function ensureMonitoringConversation(): Promise<void> {
   const client = getMindsClient();
@@ -41,61 +48,74 @@ export async function ensureMonitoringConversation(): Promise<void> {
 }
 
 /**
- * Run a monitoring session: send recent community messages to the Mind and get its assessment.
- *
- * The prompt is designed to make the Mind:
- * - Analyze interaction patterns (not just individual messages)
- * - Compare against its memory of prior conflicts (getHistory)
- * - Update its running assessment
- * - Detect escalation trajectories
- * - Recommend interventions when needed
+ * Send a message and poll for the Mind's reply.
+ * The Mind takes 40-120s to reply, so we poll getHistory instead of using waitForReply.
  */
-export async function runMonitoringSession(
-  recentMessages: Array<{ author: string; content: string; channel: string; timestamp: string }>
-): Promise<string> {
+async function sendAndWaitForReply(prompt: string, maxWaitMs = 180000): Promise<string | null> {
   const client = getMindsClient();
   await ensureMonitoringConversation();
 
-  const messagesText = recentMessages
-    .map((m) => `[${m.timestamp}] ${m.author} in ${m.channel}: ${m.content}`)
-    .join("\n");
+  // Get the current history count before sending
+  const initialHistory = await client.getHistory(MONITORING_ALIAS, { limit: 5 });
+  const initialCount = initialHistory.length;
 
-  const prompt = `You are Sentinel, a persistent community conflict monitor for the Pixel Forge pixel art community.
-
-You have been monitoring this community across multiple sessions. Your memory of prior interactions and conflicts is in your conversation history — use it to detect patterns over time.
-
-Here are the recent messages from the community:
-
-${messagesText}
-
-Analyze these messages for:
-1. Conflict patterns: Are there recurring disagreements between the same members? Is the tone escalating?
-2. Pattern matching: Does this match any prior conflict trajectory you've seen in this community? (Check your memory of past sessions.)
-3. Trajectory assessment: What is the tone trajectory? (neutral → frustrated → hostile, etc.)
-4. Intervention recommendation: Should someone intervene? If so, what should they do?
-
-Provide your assessment as a concise update. If this is your first session, establish a baseline. If you've monitored before, compare to your prior assessment and note what has changed.
-
-Format your response as:
-ASSESSMENT: [your running assessment]
-STATUS: [no_conflict | monitoring | escalating | intervene]
-NEW FINDINGS: [bullet list of any new findings, or "none"]`;
-
+  // Send the message
   await client.sendMessage({
     alias: MONITORING_ALIAS,
     messageText: prompt,
   });
 
-  const result = await client.waitForReply({
-    alias: MONITORING_ALIAS,
-    timeoutMs: 30000,
-  });
-
-  if (result.timedOut) {
-    return "ASSESSMENT: Monitoring timed out. Will retry next session.\nSTATUS: monitoring\nNEW FINDINGS: none";
+  // Poll for the Mind's reply
+  const startTime = Date.now();
+  while (Date.now() - startTime < maxWaitMs) {
+    await new Promise((r) => setTimeout(r, 15000));
+    try {
+      const history = await client.getHistory(MONITORING_ALIAS, { limit: 5 });
+      if (history.length > initialCount) {
+        const newMsg = history[0]; // most recent first
+        if (newMsg.senderType === 0 || newMsg.senderType === 2) {
+          // Mind replied — strip HTML tags
+          return (newMsg.messageText || "").replace(/<[^>]*>/g, "");
+        }
+      }
+    } catch {
+      // Transient network error — keep polling
+    }
   }
+  return null;
+}
 
-  return result.reply.messageText || "No assessment returned.";
+/**
+ * Run a monitoring session: send recent community messages to the Mind and get its assessment.
+ */
+export async function runMonitoringSession(
+  recentMessages: Array<{ author: string; content: string; channel: string; timestamp: string }>
+): Promise<string> {
+  const messagesText = recentMessages
+    .map((m) => `[${m.timestamp}] ${m.author} in ${m.channel}: ${m.content}`)
+    .join("\n");
+
+  const prompt = `I'm building a community monitoring tool called Sentinel. You're the Mind that powers it. I need your help analyzing community interactions for conflict patterns.
+
+Here are recent messages from the Pixel Forge pixel art community:
+
+${messagesText}
+
+I'd like your honest assessment of the social dynamics here. Specifically:
+1. Are there recurring disagreements between the same members? Is the tone shifting?
+2. Does this remind you of any patterns you've seen in our prior conversations? (Check your memory.)
+3. What's the emotional trajectory — neutral, frustrated, hostile?
+4. Do you think someone should intervene? What would you recommend?
+
+Be direct and genuine. If this is your first time looking at this community, say so and establish a baseline. If you've analyzed these members before, tell me what's changed.
+
+Please format your response as:
+ASSESSMENT: [your assessment]
+STATUS: [no_conflict | monitoring | escalating | intervene]
+NEW FINDINGS: [any new observations, or "none"]`;
+
+  const reply = await sendAndWaitForReply(prompt);
+  return reply || "ASSESSMENT: Monitoring timed out. Will retry next session.\nSTATUS: monitoring\nNEW FINDINGS: none";
 }
 
 /**
@@ -110,57 +130,80 @@ export async function getMonitoringHistory(limit = 50): Promise<MessageRecord[]>
 
 /**
  * Ask the Mind to draft an intervention message for a specific conflict.
- * This is the autonomous action — the Mind doesn't just detect, it acts.
  */
 export async function draftIntervention(
   conflictSummary: string,
   participantNames: string[],
   patternMatch?: string
 ): Promise<string> {
-  const client = getMindsClient();
-  await ensureMonitoringConversation();
+  const prompt = `I need your help with a community intervention. A conflict in the Pixel Forge community has escalated and I think someone should reach out to the members involved.
 
-  const prompt = `You are Sentinel. A conflict in the Pixel Forge community has escalated to the point where intervention is recommended.
-
-Conflict details:
+Here's what's happening:
 - Participants: ${participantNames.join(" vs ")}
-- Summary: ${conflictSummary}
-${patternMatch ? `- Pattern match: ${patternMatch}` : ""}
+- What's going on: ${conflictSummary}
+${patternMatch ? `- This reminds me of a prior pattern: ${patternMatch}` : ""}
 
-Draft a de-escalation message to post in the community channel. The message should:
-- Be empathetic and non-accusatory
-- Acknowledge both perspectives as valid
-- Suggest a concrete reframing (how to give feedback differently)
-- Not single out either person as the "problem"
-- Be written in the voice of a community moderator who cares about both members
+Could you draft a message I could post in the community channel? I want it to:
+- Feel genuine, not corporate
+- Acknowledge that both people have a valid perspective
+- Suggest a way forward without lecturing either of them
+- Come from someone who clearly cares about the community
 
-Return only the message text, ready to post.`;
+Just the message text, ready to post. Be yourself.`;
 
-  await client.sendMessage({
-    alias: MONITORING_ALIAS,
-    messageText: prompt,
-  });
-
-  const result = await client.waitForReply({
-    alias: MONITORING_ALIAS,
-    timeoutMs: 30000,
-  });
-
-  if (result.timedOut) {
-    return "Unable to draft intervention at this time. Please try again.";
-  }
-
-  return result.reply.messageText || "No intervention drafted.";
+  const reply = await sendAndWaitForReply(prompt, 240000);
+  return reply || "Unable to draft intervention at this time. Please try again.";
 }
 
 /**
  * Check the cognition balance before running a monitoring session or recording.
- * Running dry mid-recording would kill the demo.
  */
 export async function checkCognitionBalance(): Promise<number> {
   const client = getMindsClient();
   const balance = await client.getCognitionBalance(MIND_ID);
   return balance.cognition;
+}
+
+/**
+ * Parse the Mind's conversation history into structured monitoring sessions for the UI.
+ * Each pair of (Human prompt + Mind reply) = one monitoring session.
+ */
+export interface ParsedSession {
+  sessionNumber: number;
+  prompt: string;
+  reply: string;
+  timestamp: string;
+}
+
+export function parseHistoryToSessions(history: MessageRecord[]): ParsedSession[] {
+  // History is most-recent-first. Reverse to chronological.
+  const chronological = [...history].reverse();
+
+  const sessions: ParsedSession[] = [];
+  let currentPrompt: string | null = null;
+  let currentTimestamp: string = "";
+
+  for (const record of chronological) {
+    const isMind = record.senderType === 0 || record.senderType === 2;
+    const text = (record.messageText || "").replace(/<[^>]*>/g, "");
+
+    if (!isMind) {
+      // Human message — this is a monitoring prompt
+      currentPrompt = text;
+      currentTimestamp = record.createdAt || "";
+    } else if (currentPrompt) {
+      // Mind reply — pair it with the prompt
+      sessions.push({
+        sessionNumber: sessions.length + 1,
+        prompt: currentPrompt,
+        reply: text,
+        timestamp: currentTimestamp,
+      });
+      currentPrompt = null;
+    }
+  }
+
+  return sessions;
 }
 
 export { MONITORING_ALIAS };

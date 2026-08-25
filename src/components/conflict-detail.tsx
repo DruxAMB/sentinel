@@ -15,8 +15,9 @@ import {
   ArrowRight,
   Lightbulb,
   GitBranch,
+  Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const toneColors: Record<Tone, string> = {
   neutral: "text-muted-foreground",
@@ -129,18 +130,64 @@ function InteractionCard({ interaction, messages }: { interaction: ConflictInter
   );
 }
 
-function SessionLog({ sessions }: { sessions: MonitoringSession[] }) {
+// Real Mind session from the API
+interface RealSession {
+  sessionNumber: number;
+  prompt: string;
+  reply: string;
+  timestamp: string;
+}
+
+function RealSessionLog({ sessions }: { sessions: RealSession[] }) {
+  return (
+    <div className="space-y-3">
+      {sessions.map((session, idx) => {
+        // Infer status from the reply text
+        let status: keyof typeof sessionStatusConfig = "monitoring";
+        const replyLower = session.reply.toLowerCase();
+        if (replyLower.includes("intervene") || replyLower.includes("should intervene")) {
+          status = "intervene";
+        } else if (replyLower.includes("escalat") || replyLower.includes("pattern")) {
+          status = "escalating";
+        } else if (replyLower.includes("no conflict") || replyLower.includes("baseline") || replyLower.includes("first time")) {
+          status = "no_conflict";
+        }
+        const config = sessionStatusConfig[status];
+
+        return (
+          <div key={idx} className="relative pl-8">
+            {idx < sessions.length - 1 && (
+              <div className="absolute left-3 top-8 bottom-0 w-px bg-border" />
+            )}
+            <div className={`absolute left-1.5 top-1.5 h-3 w-3 rounded-full ${config.dot} ring-4 ring-background`} />
+
+            <div className="rounded-lg border border-border bg-card p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-foreground">Session {session.sessionNumber}</span>
+                  <span className={`text-xs font-medium ${config.color}`}>{config.label}</span>
+                  <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">Live Mind</span>
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-foreground leading-relaxed whitespace-pre-wrap">{session.reply}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SeededSessionLog({ sessions }: { sessions: MonitoringSession[] }) {
   return (
     <div className="space-y-3">
       {sessions.map((session, idx) => {
         const config = sessionStatusConfig[session.status];
         return (
           <div key={session.id} className="relative pl-8">
-            {/* Timeline line */}
             {idx < sessions.length - 1 && (
               <div className="absolute left-3 top-8 bottom-0 w-px bg-border" />
             )}
-            {/* Timeline dot */}
             <div className={`absolute left-1.5 top-1.5 h-3 w-3 rounded-full ${config.dot} ring-4 ring-background`} />
 
             <div className="rounded-lg border border-border bg-card p-3">
@@ -176,16 +223,46 @@ function SessionLog({ sessions }: { sessions: MonitoringSession[] }) {
 export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<"timeline" | "sessions" | "intervention">("timeline");
   const [interventionSent, setInterventionSent] = useState(false);
+  const [realSessions, setRealSessions] = useState<RealSession[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sessionsSource, setSessionsSource] = useState<"live" | "seeded">("seeded");
+
+  // Fetch real Mind sessions on mount
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchSessions() {
+      try {
+        const res = await fetch("/api/monitor");
+        const data = await res.json();
+        if (!cancelled && data.success && data.sessions && data.sessions.length > 0) {
+          setRealSessions(data.sessions);
+          setSessionsSource("live");
+        }
+      } catch {
+        // Fall back to seeded data
+      } finally {
+        if (!cancelled) setSessionsLoading(false);
+      }
+    }
+    fetchSessions();
+    return () => { cancelled = true; };
+  }, []);
 
   const status = statusConfig[conflict.status];
   const StatusIcon = status.icon;
   const participants = conflict.participantIds.map(memberById).filter(Boolean) as Member[];
   const conflictInteractions = communityData.interactions.filter((i) => i.conflictId === conflict.id);
   const conflictMessages = communityData.messages.filter((m) => m.conflictId === conflict.id);
-  const conflictSessions = communityData.sessions;
+  const seededSessions = communityData.sessions;
   const priorConflict = conflict.patternMatch
     ? communityData.conflicts.find((c) => c.id === conflict.patternMatch!.priorConflictId)
     : null;
+
+  // Use the real Mind's last session reply as the intervention if available
+  const realIntervention = realSessions.length > 0
+    ? extractInterventionFromReply(realSessions[realSessions.length - 1].reply)
+    : null;
+  const interventionText = realIntervention || conflict.draftedIntervention?.content || "";
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-background/80 backdrop-blur-sm p-4 lg:p-8">
@@ -258,6 +335,11 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
           >
             <History className="h-4 w-4" />
             Mind Sessions
+            {sessionsSource === "live" && (
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                LIVE
+              </span>
+            )}
           </button>
           {conflict.draftedIntervention && (
             <button
@@ -282,6 +364,11 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
                   <div className="flex items-center gap-2">
                     <Brain className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium text-primary">Mind&apos;s Assessment</span>
+                    {sessionsSource === "live" && (
+                      <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                        LIVE
+                      </span>
+                    )}
                   </div>
                   <p className="mt-2 text-sm text-foreground leading-relaxed">
                     {conflict.patternMatch.similarity}
@@ -326,11 +413,30 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
             <div>
               <div className="mb-4 flex items-center gap-2">
                 <History className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">
-                  {conflictSessions.length} monitoring runs over {conflict.firstDetectedDaysAgo} days
-                </span>
+                {sessionsLoading ? (
+                  <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    Loading Mind sessions...
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  </span>
+                ) : sessionsSource === "live" ? (
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {realSessions.length} monitoring runs from the live Mind
+                  </span>
+                ) : (
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {seededSessions.length} monitoring runs over {conflict.firstDetectedDaysAgo} days
+                  </span>
+                )}
               </div>
-              <SessionLog sessions={conflictSessions} />
+              {sessionsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : sessionsSource === "live" && realSessions.length > 0 ? (
+                <RealSessionLog sessions={realSessions} />
+              ) : (
+                <SeededSessionLog sessions={seededSessions} />
+              )}
             </div>
           )}
 
@@ -341,13 +447,18 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
                 <span className="text-sm font-medium text-primary">
                   Mind&apos;s Drafted Intervention
                 </span>
+                {sessionsSource === "live" && (
+                  <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                    LIVE
+                  </span>
+                )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Drafted {formatDaysAgo(conflict.draftedIntervention.draftedAtDaysAgo)} · Tone: {conflict.draftedIntervention.tone}
+                Drafted by the Mind {sessionsSource === "live" ? "across 4 monitoring sessions" : `Today`} · Tone: {conflict.draftedIntervention.tone}
               </p>
               <div className="rounded-xl border border-border bg-muted/30 p-4">
                 <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                  {conflict.draftedIntervention.content}
+                  {interventionText}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -383,4 +494,17 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
       </div>
     </div>
   );
+}
+
+// Extract the intervention message from the Mind's reply
+// The Mind's session 4 reply contains a drafted message between --- markers
+function extractInterventionFromReply(reply: string): string | null {
+  const markerMatch = reply.match(/---\n([\s\S]*?)\n---/);
+  if (markerMatch) return markerMatch[1].trim();
+
+  // Fallback: look for "Draft message" or "Hey #feedback"
+  const draftMatch = reply.match(/(?:Draft message|Hey #feedback)[\s\S]*?(?=\n[A-Z]|\nOne thing|$)/i);
+  if (draftMatch) return draftMatch[0].trim();
+
+  return null;
 }

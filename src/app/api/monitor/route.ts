@@ -1,41 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runMonitoringSession, checkCognitionBalance, MONITORING_ALIAS } from "@/lib/minds";
+import { runMonitoringSession, checkCognitionBalance, getMonitoringHistory, parseHistoryToSessions, MONITORING_ALIAS } from "@/lib/minds";
 import { communityData } from "@/lib/seed-data";
 
-// This route is called by Vercel Cron (or manually) to run a monitoring session.
-// The Mind reads recent community messages, updates its running assessment,
-// and returns its analysis. The assessment is persisted in the Mind's conversation
-// history — that persistence IS the product.
-
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300; // 5 min — the Mind can take up to 2 min to reply
 
+// POST: Run a new monitoring session (called by Vercel Cron or manually)
 export async function POST(request: NextRequest) {
-  // Check for Vercel Cron auth header (or a manual trigger)
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    // Allow unauthenticated requests in development
     if (process.env.NODE_ENV !== "development") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
   try {
-    // Check cognition balance before running
     const balance = await checkCognitionBalance();
     if (balance < 10) {
       return NextResponse.json({
         error: "Insufficient cognition balance",
         balance,
-        message: "Refill cognition credits before running another monitoring session.",
       }, { status: 429 });
     }
 
-    // Get recent community messages to send to the Mind
     const recentMessages = communityData.messages
-      .filter((m) => m.daysAgo <= 3) // last 3 days
+      .filter((m) => m.daysAgo <= 3)
       .map((m) => {
         const author = communityData.members.find((mem) => mem.id === m.authorId);
         return {
@@ -46,7 +37,6 @@ export async function POST(request: NextRequest) {
         };
       });
 
-    // Run the monitoring session
     const assessment = await runMonitoringSession(recentMessages);
 
     return NextResponse.json({
@@ -61,27 +51,27 @@ export async function POST(request: NextRequest) {
     console.error("Monitoring session failed:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
 
-    // Degrade gracefully — return a fallback assessment so the demo path never breaks
     return NextResponse.json({
       success: false,
       error: message,
       fallback: true,
-      assessment: "ASSESSMENT: Monitoring session encountered an error. Using cached assessment.\nSTATUS: monitoring\nNEW FINDINGS: none",
-    }, { status: 200 }); // 200 not 500 — the demo path degrades, never breaks
+      assessment: "Monitoring session encountered an error. Using cached assessment.",
+    }, { status: 200 });
   }
 }
 
-// GET endpoint to retrieve the Mind's monitoring history (the persistence proof)
+// GET: Retrieve the Mind's monitoring history (the persistence proof)
 export async function GET() {
   try {
-    const { getMonitoringHistory } = await import("@/lib/minds");
     const history = await getMonitoringHistory(50);
+    const sessions = parseHistoryToSessions(history);
 
     return NextResponse.json({
       success: true,
       alias: MONITORING_ALIAS,
-      history,
-      sessionCount: Math.floor(history.length / 2), // each session = 1 prompt + 1 reply
+      sessions,
+      sessionCount: sessions.length,
+      rawHistoryLength: history.length,
     });
   } catch (error) {
     console.error("Failed to retrieve monitoring history:", error);
@@ -90,7 +80,8 @@ export async function GET() {
     return NextResponse.json({
       success: false,
       error: message,
-      history: [],
-    }, { status: 200 }); // degrade gracefully
+      sessions: [],
+      sessionCount: 0,
+    }, { status: 200 });
   }
 }
