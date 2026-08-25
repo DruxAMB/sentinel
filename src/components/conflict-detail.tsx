@@ -335,7 +335,7 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
             <History className="h-4 w-4" />
             Mind Sessions
             {sessionsSource === "live" && (
-              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-medium text-primary">
                 LIVE
               </span>
             )}
@@ -364,7 +364,7 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
                     <Brain className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium text-primary">Mind&apos;s Assessment</span>
                     {sessionsSource === "live" && (
-                      <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                      <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-medium text-primary">
                         LIVE
                       </span>
                     )}
@@ -377,7 +377,7 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
                     <span className="text-xs text-muted-foreground">
                       Prior conflict: <span className="font-medium text-foreground">{conflict.patternMatch.priorParticipantNames.join(" vs ")}</span>
                       {" — "}
-                      <span className={priorConflict.status === "resolved" ? "text-emerald-600 dark:text-emerald-400" : ""}>
+                      <span className={priorConflict.status === "resolved" ? "text-primary" : ""}>
                         {priorConflict.status === "resolved" ? "resolved via ban" : priorConflict.status}
                       </span>
                     </span>
@@ -447,7 +447,7 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
                   Mind&apos;s Drafted Intervention
                 </span>
                 {sessionsSource === "live" && (
-                  <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                  <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-medium text-primary">
                     LIVE
                   </span>
                 )}
@@ -475,14 +475,14 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
                     </button>
                   </>
                 ) : (
-                  <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                  <div className="flex items-center gap-2 text-sm text-primary">
                     <CheckCircle2 className="h-4 w-4" />
                     <span>Intervention sent to #feedback</span>
                   </div>
                 )}
               </div>
               <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-                <p className="text-xs text-amber-700 dark:text-amber-400">
+                <p className="text-xs text-amber-500">
                   This message was drafted autonomously by the Mind based on the conflict pattern and community norms.
                   Review before sending. The Mind will monitor responses and update its assessment.
                 </p>
