@@ -21,42 +21,42 @@ import { useState, useEffect } from "react";
 
 const toneColors: Record<Tone, string> = {
   neutral: "text-muted-foreground",
-  warm: "text-emerald-600 dark:text-emerald-400",
-  playful: "text-blue-600 dark:text-blue-400",
-  frustrated: "text-amber-600 dark:text-amber-400",
-  defensive: "text-orange-600 dark:text-orange-400",
-  hostile: "text-red-600 dark:text-red-400",
+  warm: "text-primary",
+  playful: "text-primary",
+  frustrated: "text-amber-500",
+  defensive: "text-orange-500",
+  hostile: "text-destructive",
 };
 
 const toneBg: Record<Tone, string> = {
   neutral: "bg-muted border-border",
-  warm: "bg-emerald-500/10 border-emerald-500/30",
-  playful: "bg-blue-500/10 border-blue-500/30",
+  warm: "bg-primary/5 border-primary/20",
+  playful: "bg-primary/5 border-primary/20",
   frustrated: "bg-amber-500/10 border-amber-500/30",
   defensive: "bg-orange-500/10 border-orange-500/30",
-  hostile: "bg-red-500/10 border-red-500/30",
+  hostile: "bg-destructive/10 border-destructive/30",
 };
 
 const toneDot: Record<Tone, string> = {
   neutral: "bg-muted-foreground",
-  warm: "bg-emerald-500",
-  playful: "bg-blue-500",
+  warm: "bg-primary",
+  playful: "bg-primary",
   frustrated: "bg-amber-500",
   defensive: "bg-orange-500",
-  hostile: "bg-red-500",
+  hostile: "bg-destructive",
 };
 
 const statusConfig = {
-  active: { icon: AlertTriangle, label: "Active", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", border: "border-red-500/30" },
-  monitoring: { icon: Eye, label: "Monitoring", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
-  resolved: { icon: CheckCircle2, label: "Resolved", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+  active: { icon: AlertTriangle, label: "Active", color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/30" },
+  monitoring: { icon: Eye, label: "Monitoring", color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+  resolved: { icon: CheckCircle2, label: "Resolved", color: "text-primary", bg: "bg-primary/5", border: "border-primary/20" },
 } as const;
 
 const sessionStatusConfig = {
   no_conflict: { label: "No Conflict", color: "text-muted-foreground", dot: "bg-muted-foreground" },
-  monitoring: { label: "Monitoring", color: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" },
-  escalating: { label: "Escalating", color: "text-orange-600 dark:text-orange-400", dot: "bg-orange-500" },
-  intervene: { label: "Intervene", color: "text-red-600 dark:text-red-400", dot: "bg-red-500" },
+  monitoring: { label: "Monitoring", color: "text-amber-500", dot: "bg-amber-500" },
+  escalating: { label: "Escalating", color: "text-orange-500", dot: "bg-orange-500" },
+  intervene: { label: "Intervene", color: "text-destructive", dot: "bg-destructive" },
 } as const;
 
 function memberById(id: string): Member | undefined {

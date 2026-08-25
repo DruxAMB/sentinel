@@ -3,36 +3,37 @@
 import { communityData } from "@/lib/seed-data";
 import type { Message, Member, Tone, ConflictWatch } from "@/lib/types";
 import { Shield, Activity, AlertTriangle, Eye, CheckCircle2, Clock } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ConflictDetail } from "@/components/conflict-detail";
+import { Landing } from "@/components/landing";
 
 const toneColors: Record<Tone, string> = {
   neutral: "text-muted-foreground",
-  warm: "text-emerald-600 dark:text-emerald-400",
-  playful: "text-blue-600 dark:text-blue-400",
-  frustrated: "text-amber-600 dark:text-amber-400",
-  defensive: "text-orange-600 dark:text-orange-400",
-  hostile: "text-red-600 dark:text-red-400",
+  warm: "text-primary",
+  playful: "text-primary",
+  frustrated: "text-amber-500",
+  defensive: "text-orange-500",
+  hostile: "text-destructive",
 };
 
 const toneBg: Record<Tone, string> = {
   neutral: "bg-muted",
-  warm: "bg-emerald-500/10",
-  playful: "bg-blue-500/10",
+  warm: "bg-primary/5",
+  playful: "bg-primary/5",
   frustrated: "bg-amber-500/10",
   defensive: "bg-orange-500/10",
-  hostile: "bg-red-500/10",
+  hostile: "bg-destructive/10",
 };
 
 const statusConfig = {
-  active: { icon: AlertTriangle, label: "Active", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", border: "border-red-500/30" },
-  monitoring: { icon: Eye, label: "Monitoring", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
-  resolved: { icon: CheckCircle2, label: "Resolved", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+  active: { icon: AlertTriangle, label: "Active", color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/30" },
+  monitoring: { icon: Eye, label: "Monitoring", color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+  resolved: { icon: CheckCircle2, label: "Resolved", color: "text-primary", bg: "bg-primary/5", border: "border-primary/20" },
 } as const;
 
 const priorityConfig = {
-  high: "text-red-600 dark:text-red-400",
-  medium: "text-amber-600 dark:text-amber-400",
+  high: "text-destructive",
+  medium: "text-amber-500",
   low: "text-muted-foreground",
 } as const;
 
@@ -139,6 +140,7 @@ function ConflictCard({ conflict, onClick }: { conflict: ConflictWatch; onClick:
 
 export default function Home() {
   const [selectedConflict, setSelectedConflict] = useState<ConflictWatch | null>(null);
+  const dashboardRef = useRef<HTMLDivElement>(null);
   const recentMessages = [...communityData.messages].sort((a, b) => a.daysAgo - b.daysAgo).slice(0, 15);
   const activeConflicts = communityData.conflicts.filter((c) => c.status === "active");
   const monitoringConflicts = communityData.conflicts.filter((c) => c.status === "monitoring");
@@ -147,6 +149,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Landing section */}
+      <Landing onTryDemo={() => dashboardRef.current?.scrollIntoView({ behavior: "smooth" })} />
+
+      {/* Dashboard */}
+      <div ref={dashboardRef}>
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
@@ -157,9 +164,9 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 text-sm">
-              <Activity className="h-4 w-4 text-emerald-500" />
+              <Activity className="h-4 w-4 text-primary" />
               <span className="text-muted-foreground">Mind status:</span>
-              <span className="font-medium text-emerald-600 dark:text-emerald-400">monitoring</span>
+              <span className="font-medium text-primary">monitoring</span>
             </div>
             <div className="text-sm text-muted-foreground">
               {communityData.members.length} members
@@ -251,6 +258,7 @@ export default function Home() {
           onClose={() => setSelectedConflict(null)}
         />
       )}
+      </div>
     </div>
   );
 }

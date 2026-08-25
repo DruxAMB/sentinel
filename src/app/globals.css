@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,73 +48,99 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Neon design system — "Server Room After Dark"
+ * Adapted from styles.refero.design/style/cc38369a-41e3-4bcd-b619-230ccffe7e8e
+ * Source: Neon (neon.tech) — fonts substituted (Geist Sans for Inter, both open)
+ *
+ * Do: Use pure black for backgrounds. Reserve Neon Glow for accents only.
+ *     Achieve depth by layering near-black surfaces, not box-shadows.
+ *     4px radius for containers, 9999px (pill) for buttons.
+ * Don't: Use gradients on main sections. Use box-shadows for elevation.
+ *         Use Neon Glow for body copy. Use saturated colors beyond green + red.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Force dark theme — Neon is dark-only */
+  color-scheme: dark;
+
+  /* Neutrals — layered near-black surfaces */
+  --background: #000000;          /* Blackout — page canvas */
+  --foreground: #ffffff;          /* Whiteout — primary text */
+  --card: #151617;                /* Graphite Deep — card surfaces */
+  --card-foreground: #ffffff;
+  --popover: #151617;
+  --popover-foreground: #ffffff;
+  --secondary: #242628;           /* Graphite — secondary surfaces */
+  --secondary-foreground: #ffffff;
+  --muted: #242628;               /* Graphite — muted surfaces */
+  --muted-foreground: #797d86;    /* Ash — secondary text */
+  --accent: #242628;              /* Graphite — accent surfaces */
+  --accent-foreground: #ffffff;
+  --border: #303236;              /* Graphite Light — hairlines */
+  --input: #303236;               /* Graphite Light — input borders */
+
+  /* The one accent — Neon Glow (electric green) */
+  --primary: #34d59a;
+  --primary-foreground: #000000;  /* Black text on green */
+
+  /* State feedback */
+  --destructive: #ff3621;         /* System Warning — conflict alerts */
+  --ring: #34d59a;                /* Focus ring = accent */
+
+  /* Chart colors — derived from Neon's palette */
+  --chart-1: #34d59a;             /* Neon Glow */
+  --chart-2: #285d49;             /* Neon Muted */
+  --chart-3: #ff3621;             /* System Warning */
+  --chart-4: #797d86;             /* Ash */
+  --chart-5: #303236;             /* Graphite Light */
+
+  /* Radius — Neon uses 4px for containers, pills for buttons */
+  --radius: 4px;
+
+  /* Sidebar — same dark palette */
+  --sidebar: #0a0a0b;             /* Depth — slightly elevated from black */
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #34d59a;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #242628;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #303236;
+  --sidebar-ring: #34d59a;
 }
 
+/* Dark class mirrors :root — both are the same dark theme */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #151617;
+  --card-foreground: #ffffff;
+  --popover: #151617;
+  --popover-foreground: #ffffff;
+  --primary: #34d59a;
+  --primary-foreground: #000000;
+  --secondary: #242628;
+  --secondary-foreground: #ffffff;
+  --muted: #242628;
+  --muted-foreground: #797d86;
+  --accent: #242628;
+  --accent-foreground: #ffffff;
+  --destructive: #ff3621;
+  --border: #303236;
+  --input: #303236;
+  --ring: #34d59a;
+  --chart-1: #34d59a;
+  --chart-2: #285d49;
+  --chart-3: #ff3621;
+  --chart-4: #797d86;
+  --chart-5: #303236;
+  --sidebar: #0a0a0b;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #34d59a;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #242628;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #303236;
+  --sidebar-ring: #34d59a;
 }
 
 @layer base {
