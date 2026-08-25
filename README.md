@@ -112,4 +112,4 @@ npm run build
 
 ## License
 
-MIT
+MIT — covers this project's code. GSAP ships under GreenSock's "no charge" licence (not MIT); see [gsap.com](https://gsap.com). All other dependencies retain their respective licences.
