@@ -1,4 +1,4 @@
-import { Shield, Brain, ArrowRight, Activity, Eye, AlertTriangle, GitBranch, MessageSquare } from "lucide-react";
+import { Brain, ArrowRight, Activity, GitBranch, MessageSquare } from "lucide-react";
 
 export function Landing({ onTryDemo }: { onTryDemo: () => void }) {
   return (
