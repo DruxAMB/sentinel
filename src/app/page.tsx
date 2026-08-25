@@ -1,6 +1,10 @@
+"use client";
+
 import { communityData } from "@/lib/seed-data";
-import type { Message, Member, Tone } from "@/lib/types";
+import type { Message, Member, Tone, ConflictWatch } from "@/lib/types";
 import { Shield, Activity, AlertTriangle, Eye, CheckCircle2, Clock } from "lucide-react";
+import { useState } from "react";
+import { ConflictDetail } from "@/components/conflict-detail";
 
 const toneColors: Record<Tone, string> = {
   neutral: "text-muted-foreground",
@@ -81,13 +85,16 @@ function MessageRow({ message }: { message: Message }) {
   );
 }
 
-function ConflictCard({ conflict }: { conflict: typeof communityData.conflicts[0] }) {
+function ConflictCard({ conflict, onClick }: { conflict: ConflictWatch; onClick: () => void }) {
   const status = statusConfig[conflict.status];
   const StatusIcon = status.icon;
   const participants = conflict.participantIds.map(memberById).filter(Boolean) as Member[];
 
   return (
-    <div className={`rounded-xl border ${status.border} ${status.bg} p-4 transition-colors hover:bg-muted/30`}>
+    <button
+      onClick={onClick}
+      className={`w-full text-left rounded-xl border ${status.border} ${status.bg} p-4 transition-all hover:shadow-md hover:scale-[1.01] cursor-pointer`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <StatusIcon className={`h-4 w-4 ${status.color}`} />
@@ -126,11 +133,12 @@ function ConflictCard({ conflict }: { conflict: typeof communityData.conflicts[0
         <span>First detected: {formatDaysAgo(conflict.firstDetectedDaysAgo)}</span>
         <span>Last: {formatDaysAgo(conflict.lastInteractionDaysAgo)}</span>
       </div>
-    </div>
+    </button>
   );
 }
 
 export default function Home() {
+  const [selectedConflict, setSelectedConflict] = useState<ConflictWatch | null>(null);
   const recentMessages = [...communityData.messages].sort((a, b) => a.daysAgo - b.daysAgo).slice(0, 15);
   const activeConflicts = communityData.conflicts.filter((c) => c.status === "active");
   const monitoringConflicts = communityData.conflicts.filter((c) => c.status === "monitoring");
@@ -192,7 +200,7 @@ export default function Home() {
             {activeConflicts.length > 0 && (
               <div className="space-y-3">
                 {activeConflicts.map((c) => (
-                  <ConflictCard key={c.id} conflict={c} />
+                  <ConflictCard key={c.id} conflict={c} onClick={() => setSelectedConflict(c)} />
                 ))}
               </div>
             )}
@@ -202,7 +210,7 @@ export default function Home() {
               <div className="space-y-3">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Monitoring</span>
                 {monitoringConflicts.map((c) => (
-                  <ConflictCard key={c.id} conflict={c} />
+                  <ConflictCard key={c.id} conflict={c} onClick={() => setSelectedConflict(c)} />
                 ))}
               </div>
             )}
@@ -212,7 +220,7 @@ export default function Home() {
               <div className="space-y-3">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Resolved</span>
                 {resolvedConflicts.map((c) => (
-                  <ConflictCard key={c.id} conflict={c} />
+                  <ConflictCard key={c.id} conflict={c} onClick={() => setSelectedConflict(c)} />
                 ))}
               </div>
             )}
@@ -235,6 +243,14 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* Conflict detail modal */}
+      {selectedConflict && (
+        <ConflictDetail
+          conflict={selectedConflict}
+          onClose={() => setSelectedConflict(null)}
+        />
+      )}
     </div>
   );
 }
