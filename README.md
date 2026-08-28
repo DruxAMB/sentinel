@@ -23,7 +23,11 @@ The key insight: **the Mind's conversation history IS the memory.** Each monitor
 
 ## Demo
 
-**Live URL:** https://sentinel-gold-xi.vercel.app
+**Live URL:** https://sentinel.druxamb.dev
+
+**Demo video:** https://youtu.be/MmStYCWO9-8
+
+![Sentinel — how it works](public/hero-shot.png)
 
 The demo shows the Pixel Forge community — a Discord-style pixel art creator community with 12 members. A conflict between two members (Alex and Jordan) over palette philosophy escalates from a neutral disagreement to hostile personal attacks over 12 days.
 

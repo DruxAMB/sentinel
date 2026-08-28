@@ -1,7 +1,9 @@
 # Sentinel — Demo Script (90 seconds)
 
+**Demo video:** https://youtu.be/MmStYCWO9-8
+
 ## Pre-demo setup
-- Open https://sentinel-gold-xi.vercel.app in a fresh browser tab
+- Open https://sentinel.druxamb.dev in a fresh browser tab
 - Ensure the page is loaded and showing the landing/hero section
 - Have the browser at 1440px width (desktop)
 
