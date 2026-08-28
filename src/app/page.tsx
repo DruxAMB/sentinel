@@ -2,8 +2,8 @@
 
 import { communityData } from "@/lib/seed-data";
 import type { Message, Member, Tone, ConflictWatch } from "@/lib/types";
-import { Shield, Activity, AlertTriangle, Eye, CheckCircle2, Clock } from "lucide-react";
-import { useState, useRef } from "react";
+import { Shield, Activity, AlertTriangle, Eye, CheckCircle2, Clock, ArrowLeft } from "lucide-react";
+import { useState } from "react";
 import { ConflictDetail } from "@/components/conflict-detail";
 import { Landing } from "@/components/landing";
 
@@ -140,20 +140,19 @@ function ConflictCard({ conflict, onClick }: { conflict: ConflictWatch; onClick:
 
 export default function Home() {
   const [selectedConflict, setSelectedConflict] = useState<ConflictWatch | null>(null);
-  const dashboardRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<"landing" | "demo">("landing");
   const recentMessages = [...communityData.messages].sort((a, b) => a.daysAgo - b.daysAgo).slice(0, 15);
   const activeConflicts = communityData.conflicts.filter((c) => c.status === "active");
   const monitoringConflicts = communityData.conflicts.filter((c) => c.status === "monitoring");
   const resolvedConflicts = communityData.conflicts.filter((c) => c.status === "resolved");
   const latestSession = communityData.sessions[communityData.sessions.length - 1];
 
+  if (view === "landing") {
+    return <Landing onTryDemo={() => setView("demo")} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Landing section */}
-      <Landing onTryDemo={() => dashboardRef.current?.scrollIntoView({ behavior: "smooth" })} />
-
-      {/* Dashboard */}
-      <div ref={dashboardRef}>
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
@@ -171,6 +170,13 @@ export default function Home() {
             <div className="text-sm text-muted-foreground">
               {communityData.members.length} members
             </div>
+            <button
+              onClick={() => setView("landing")}
+              className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-card"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back
+            </button>
           </div>
         </div>
       </header>
@@ -258,7 +264,6 @@ export default function Home() {
           onClose={() => setSelectedConflict(null)}
         />
       )}
-      </div>
     </div>
   );
 }
