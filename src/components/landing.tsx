@@ -3,11 +3,12 @@
 import { useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import { Brain, ArrowRight, Activity, GitBranch, MessageSquare, Play, X } from "lucide-react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Brain, ArrowRight, Activity, GitBranch, MessageSquare, Play, X, ChevronUp } from "lucide-react";
 
 // Register once at module top level — guarded for SSR (useGSAP touches window)
 if (typeof window !== "undefined") {
-  gsap.registerPlugin(useGSAP);
+  gsap.registerPlugin(useGSAP, ScrollTrigger);
 }
 
 export function Landing({
@@ -73,6 +74,24 @@ export function Landing({
         ease: "sine.inOut",
         yoyo: true,
         repeat: -1,
+      });
+
+      // Pin the Mind's assessment section when it reaches center of screen
+      // Hard stop — user can't scroll past it, only back up
+      ScrollTrigger.create({
+        trigger: ".mind-assessment",
+        start: "center center",
+        end: "+=1",
+        pin: true,
+        pinSpacing: false,
+        onEnter: () => {
+          // Show the "scroll up" hint when pinned
+          gsap.to(".scroll-up-hint", { opacity: 1, duration: 0.4, delay: 0.3 });
+        },
+        onLeaveBack: () => {
+          // Hide the hint when scrolling back up
+          gsap.to(".scroll-up-hint", { opacity: 0, duration: 0.3 });
+        },
       });
     },
     { scope: containerRef }
@@ -204,8 +223,8 @@ export function Landing({
         </div>
       </section>
 
-      {/* Proof — the Mind's real output */}
-      <section className="relative mx-auto max-w-[1120px] px-5 pb-16 sm:pb-24">
+      {/* Proof — the Mind's real output (pins at center on scroll) */}
+      <section className="mind-assessment relative mx-auto max-w-[1120px] px-5 pb-16 sm:pb-24">
         <div className="rounded-lg border border-border bg-card p-6 sm:p-8">
           <div className="flex items-center gap-2">
             <Brain className="h-4 w-4 text-primary" />
@@ -222,6 +241,11 @@ export function Landing({
           <p className="mt-3 font-mono text-xs text-muted-foreground">
             — sentinel (the Mind), session 3 of 4, live output
           </p>
+        </div>
+        {/* Scroll-up hint — appears when pinned */}
+        <div className="scroll-up-hint pointer-events-none mt-6 flex flex-col items-center gap-1 opacity-0 transition-opacity">
+          <ChevronUp className="h-5 w-5 text-muted-foreground animate-bounce" />
+          <span className="text-xs text-muted-foreground">Scroll up to go back</span>
         </div>
       </section>
 
