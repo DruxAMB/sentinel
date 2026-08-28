@@ -53,9 +53,7 @@ function Avatar({ member, size = "sm" }: { member: Member; size?: "sm" | "md" })
   const dims = size === "sm" ? "h-8 w-8" : "h-10 w-10";
   const color = member.avatarColor;
   const [imgError, setImgError] = useState(false);
-  const iconUrl = member.gender === "male"
-    ? "https://img.icons8.com/3d-fluent/96/person-male.png"
-    : "https://img.icons8.com/3d-fluent/96/person-female.png";
+  const avatarUrl = `https://i.pravatar.cc/150?img=${member.avatarImg}`;
 
   if (imgError) {
     const iconSize = size === "sm" ? 16 : 20;
@@ -89,7 +87,7 @@ function Avatar({ member, size = "sm" }: { member: Member; size?: "sm" | "md" })
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={iconUrl}
+        src={avatarUrl}
         alt={member.name}
         className="h-full w-full object-cover"
         onError={() => setImgError(true)}

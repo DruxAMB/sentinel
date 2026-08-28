@@ -6,7 +6,8 @@ export interface Member {
   id: string;
   name: string;
   handle: string;
-  avatarColor: string; // hex color for 3D orb avatar
+  avatarColor: string; // hex color for 3D orb avatar fallback
+  avatarImg: number; // pravatar.cc image number (1-70)
   gender: "male" | "female";
   joinedDaysAgo: number;
   role: "member" | "moderator" | "regular";
