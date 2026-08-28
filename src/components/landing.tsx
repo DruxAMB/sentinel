@@ -3,12 +3,11 @@
 import { useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Brain, ArrowRight, Activity, GitBranch, MessageSquare, Play, X, ChevronUp } from "lucide-react";
 
 // Register once at module top level — guarded for SSR (useGSAP touches window)
 if (typeof window !== "undefined") {
-  gsap.registerPlugin(useGSAP, ScrollTrigger);
+  gsap.registerPlugin(useGSAP);
 }
 
 export function Landing({
@@ -75,24 +74,6 @@ export function Landing({
         yoyo: true,
         repeat: -1,
       });
-
-      // Pin the Mind's assessment section when it reaches center of screen
-      // Hard stop — user can't scroll past it, only back up
-      ScrollTrigger.create({
-        trigger: ".mind-assessment",
-        start: "center center",
-        end: "+=1",
-        pin: true,
-        pinSpacing: false,
-        onEnter: () => {
-          // Show the "scroll up" hint when pinned
-          gsap.to(".scroll-up-hint", { opacity: 1, duration: 0.4, delay: 0.3 });
-        },
-        onLeaveBack: () => {
-          // Hide the hint when scrolling back up
-          gsap.to(".scroll-up-hint", { opacity: 0, duration: 0.3 });
-        },
-      });
     },
     { scope: containerRef }
   );
@@ -104,150 +85,156 @@ export function Landing({
   return (
     <div
       ref={containerRef}
-      className="relative border-b border-border bg-background overflow-hidden"
+      className="relative bg-background"
       style={{
         transform: isExiting ? "translateY(-100%)" : "translateY(0)",
         opacity: isExiting ? 0 : 1,
         transition: "transform 350ms cubic-bezier(0.83, 0, 0.17, 1), opacity 300ms ease-out",
       }}
     >
-      {/* Background glow — Neon green radial, fits "Server Room After Dark" */}
-      <div
-        className="hero-glow pointer-events-none absolute left-1/2 top-0 h-[400px] w-[600px] -translate-x-1/2 opacity-5"
-        style={{
-          background: "radial-gradient(ellipse at center, #34d59a 0%, transparent 70%)",
-        }}
-      />
+      {/* Hero — sticky at top, z-0. Stays in place as assessment scrolls over it. */}
+      <div className="sticky top-0 h-screen overflow-hidden relative z-0 border-b border-border">
+        {/* Background glow */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div
+            className="hero-glow pointer-events-none absolute left-1/2 top-0 h-[400px] w-[600px] -translate-x-1/2 opacity-5"
+            style={{
+              background: "radial-gradient(ellipse at center, #34d59a 0%, transparent 70%)",
+            }}
+          />
+        </div>
 
-      {/* Hero */}
-      <section className="relative mx-auto max-w-[1120px] px-5 py-16 sm:py-24">
-        <div className="flex flex-col items-center text-center">
-          {/* Badge */}
-          <div className="hero-badge mb-6 flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
-            <div className="h-2 w-2 rounded-full bg-primary" />
-            <span className="font-mono text-xs text-muted-foreground uppercase tracking-wide">
-              Powered by a Mind
-            </span>
-          </div>
-
-          {/* Headline — split into words for stagger animation */}
-          <h1
-            className="max-w-3xl text-4xl font-medium tracking-tight text-foreground sm:text-5xl md:text-6xl"
-            style={{ letterSpacing: "-0.025em", lineHeight: 1.05 }}
-          >
-            {headlineWords.map((word, i) => (
-              <span key={i} className="hero-word inline-block mr-[0.25em]">
-                {word}
+        {/* Hero + How it works — fills the screen */}
+        <div className="relative h-full flex flex-col justify-center mx-auto max-w-[1120px] px-5">
+          {/* Hero content */}
+          <div className="flex flex-col items-center text-center">
+            {/* Badge */}
+            <div className="hero-badge mb-6 flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
+              <div className="h-2 w-2 rounded-full bg-primary" />
+              <span className="font-mono text-xs text-muted-foreground uppercase tracking-wide">
+                Powered by a Mind
               </span>
-            ))}
-            <span className="text-primary">
-              {headlineAccent.map((word, i) => (
+            </div>
+
+            {/* Headline — split into words for stagger animation */}
+            <h1
+              className="max-w-3xl text-4xl font-medium tracking-tight text-foreground sm:text-5xl md:text-6xl"
+              style={{ letterSpacing: "-0.025em", lineHeight: 1.05 }}
+            >
+              {headlineWords.map((word, i) => (
                 <span key={i} className="hero-word inline-block mr-[0.25em]">
                   {word}
                 </span>
               ))}
-            </span>
-          </h1>
+              <span className="text-primary">
+                {headlineAccent.map((word, i) => (
+                  <span key={i} className="hero-word inline-block mr-[0.25em]">
+                    {word}
+                  </span>
+                ))}
+              </span>
+            </h1>
 
-          {/* Subhead */}
-          <p
-            className="hero-subhead mt-6 max-w-xl text-base text-muted-foreground sm:text-lg"
-            style={{ lineHeight: 1.5 }}
-          >
-            Sentinel remembers interaction patterns over weeks. It detects brewing conflicts,
-            matches them to prior trajectories, and drafts interventions — autonomously, across
-            persistent monitoring sessions.
-          </p>
-
-          {/* CTAs */}
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-            <button
-              onClick={onTryDemo}
-              className="hero-cta flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            {/* Subhead */}
+            <p
+              className="hero-subhead mt-6 max-w-xl text-base text-muted-foreground sm:text-lg"
+              style={{ lineHeight: 1.5 }}
             >
-              Connect your community
-              <ArrowRight className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setShowVideo(true)}
-              className="hero-cta flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-card"
-            >
-              <Play className="h-4 w-4" />
-              Watch demo
-            </button>
+              Sentinel remembers interaction patterns over weeks. It detects brewing conflicts,
+              matches them to prior trajectories, and drafts interventions — autonomously, across
+              persistent monitoring sessions.
+            </p>
+
+            {/* CTAs */}
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+              <button
+                onClick={onTryDemo}
+                className="hero-cta flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Connect your community
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setShowVideo(true)}
+                className="hero-cta flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-card"
+              >
+                <Play className="h-4 w-4" />
+                Watch demo
+              </button>
+            </div>
+          </div>
+
+          {/* How it works — 3 steps */}
+          <div className="mt-10 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
+            {/* Step 1 */}
+            <div className="bg-card p-5">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-primary">01</span>
+                <Activity className="h-4 w-4 text-primary" />
+              </div>
+              <h3 className="mt-2 text-sm font-medium text-foreground">Monitors continuously</h3>
+              <p className="mt-1 text-xs text-muted-foreground" style={{ lineHeight: 1.5 }}>
+                The Mind reads community messages on a schedule — every 6 hours, persistently, across
+                sessions.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="bg-card p-5">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-primary">02</span>
+                <GitBranch className="h-4 w-4 text-primary" />
+              </div>
+              <h3 className="mt-2 text-sm font-medium text-foreground">Detects patterns</h3>
+              <p className="mt-1 text-xs text-muted-foreground" style={{ lineHeight: 1.5 }}>
+                It remembers prior interactions and matches new ones against escalation trajectories
+                it has seen before.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-card p-5">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-primary">03</span>
+                <MessageSquare className="h-4 w-4 text-primary" />
+              </div>
+              <h3 className="mt-2 text-sm font-medium text-foreground">Drafts interventions</h3>
+              <p className="mt-1 text-xs text-muted-foreground" style={{ lineHeight: 1.5 }}>
+                When a conflict escalates, the Mind drafts a de-escalation message — reviewed by a
+                human, posted with one click.
+              </p>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* How it works — 3 steps */}
-      <section className="relative mx-auto max-w-[1120px] px-5 pb-16 sm:pb-24">
-        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
-          {/* Step 1 */}
-          <div className="bg-card p-6">
+      {/* Assessment — sticky at top, z-10, transparent bg. Negative margin pulls a quarter of it into the hero's bottom so it peeks before scroll. */}
+      <div className="sticky top-0 h-[80vh] flex items-center justify-center px-5 z-10 -mt-[24vh] md:-mt-[36vh]">
+        <div className="w-full max-w-2xl">
+          <div className="rounded-lg border border-border bg-card p-6 sm:p-8 shadow-2xl">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-primary">01</span>
-              <Activity className="h-4 w-4 text-primary" />
+              <Brain className="h-4 w-4 text-primary" />
+              <span className="font-mono text-xs text-muted-foreground uppercase tracking-wide">
+                The Mind&apos;s real assessment
+              </span>
             </div>
-            <h3 className="mt-3 text-sm font-medium text-foreground">Monitors continuously</h3>
-            <p className="mt-1.5 text-sm text-muted-foreground" style={{ lineHeight: 1.5 }}>
-              The Mind reads community messages on a schedule — every 6 hours, persistently, across
-              sessions.
+            <blockquote className="mt-4 text-sm text-foreground sm:text-base" style={{ lineHeight: 1.6 }}>
+              &ldquo;This is the third clash between Jordan and Alex... the pattern is forming fast
+              enough that I want to be specific. Aug 14 was substantive and resolved cleanly. Aug 18
+              broke the pattern. The argument has moved off palettes entirely and onto each other...
+              I&apos;d revise the timeline to days, not weeks.&rdquo;
+            </blockquote>
+            <p className="mt-3 font-mono text-xs text-muted-foreground">
+              — sentinel (the Mind), session 3 of 4, live output
             </p>
           </div>
-
-          {/* Step 2 */}
-          <div className="bg-card p-6">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-primary">02</span>
-              <GitBranch className="h-4 w-4 text-primary" />
-            </div>
-            <h3 className="mt-3 text-sm font-medium text-foreground">Detects patterns</h3>
-            <p className="mt-1.5 text-sm text-muted-foreground" style={{ lineHeight: 1.5 }}>
-              It remembers prior interactions and matches new ones against escalation trajectories
-              it has seen before.
-            </p>
-          </div>
-
-          {/* Step 3 */}
-          <div className="bg-card p-6">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-primary">03</span>
-              <MessageSquare className="h-4 w-4 text-primary" />
-            </div>
-            <h3 className="mt-3 text-sm font-medium text-foreground">Drafts interventions</h3>
-            <p className="mt-1.5 text-sm text-muted-foreground" style={{ lineHeight: 1.5 }}>
-              When a conflict escalates, the Mind drafts a de-escalation message — reviewed by a
-              human, posted with one click.
-            </p>
+          {/* Scroll-up hint */}
+          <div className="mt-6 flex flex-col items-center gap-1">
+            <ChevronUp className="h-5 w-5 text-muted-foreground animate-bounce" />
+            <span className="text-xs text-muted-foreground">Scroll up to go back</span>
           </div>
         </div>
-      </section>
-
-      {/* Proof — the Mind's real output (pins at center on scroll) */}
-      <section className="mind-assessment relative mx-auto max-w-[1120px] px-5 pb-16 sm:pb-24">
-        <div className="rounded-lg border border-border bg-card p-6 sm:p-8">
-          <div className="flex items-center gap-2">
-            <Brain className="h-4 w-4 text-primary" />
-            <span className="font-mono text-xs text-muted-foreground uppercase tracking-wide">
-              The Mind&apos;s real assessment
-            </span>
-          </div>
-          <blockquote className="mt-4 text-sm text-foreground sm:text-base" style={{ lineHeight: 1.6 }}>
-            &ldquo;This is the third clash between Jordan and Alex... the pattern is forming fast
-            enough that I want to be specific. Aug 14 was substantive and resolved cleanly. Aug 18
-            broke the pattern. The argument has moved off palettes entirely and onto each other...
-            I&apos;d revise the timeline to days, not weeks.&rdquo;
-          </blockquote>
-          <p className="mt-3 font-mono text-xs text-muted-foreground">
-            — sentinel (the Mind), session 3 of 4, live output
-          </p>
-        </div>
-        {/* Scroll-up hint — appears when pinned */}
-        <div className="scroll-up-hint pointer-events-none mt-6 flex flex-col items-center gap-1 opacity-0 transition-opacity">
-          <ChevronUp className="h-5 w-5 text-muted-foreground animate-bounce" />
-          <span className="text-xs text-muted-foreground">Scroll up to go back</span>
-        </div>
-      </section>
+      </div>
 
       {/* Video modal */}
       {showVideo && (
