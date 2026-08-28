@@ -154,3 +154,26 @@
     @apply font-sans;
   }
 }
+
+/* Vertical wipe — landing slides up and out, demo slides up from below */
+@keyframes wipe-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes wipe-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

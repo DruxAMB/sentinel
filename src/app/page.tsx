@@ -141,18 +141,35 @@ function ConflictCard({ conflict, onClick }: { conflict: ConflictWatch; onClick:
 export default function Home() {
   const [selectedConflict, setSelectedConflict] = useState<ConflictWatch | null>(null);
   const [view, setView] = useState<"landing" | "demo">("landing");
+  const [isExiting, setIsExiting] = useState(false);
   const recentMessages = [...communityData.messages].sort((a, b) => a.daysAgo - b.daysAgo).slice(0, 15);
   const activeConflicts = communityData.conflicts.filter((c) => c.status === "active");
   const monitoringConflicts = communityData.conflicts.filter((c) => c.status === "monitoring");
   const resolvedConflicts = communityData.conflicts.filter((c) => c.status === "resolved");
   const latestSession = communityData.sessions[communityData.sessions.length - 1];
 
+  const handleTryDemo = () => {
+    setIsExiting(true);
+    // Wait for the landing wipe-out transition (350ms) then swap views
+    setTimeout(() => setView("demo"), 350);
+  };
+
+  const handleBack = () => {
+    setView("landing");
+    setIsExiting(false);
+  };
+
   if (view === "landing") {
-    return <Landing onTryDemo={() => setView("demo")} />;
+    return <Landing onTryDemo={handleTryDemo} isExiting={isExiting} />;
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="min-h-screen bg-background"
+      style={{
+        animation: "wipe-in 350ms cubic-bezier(0.83, 0, 0.17, 1)",
+      }}
+    >
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
@@ -171,7 +188,7 @@ export default function Home() {
               {communityData.members.length} members
             </div>
             <button
-              onClick={() => setView("landing")}
+              onClick={handleBack}
               className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-card"
             >
               <ArrowLeft className="h-3.5 w-3.5" />

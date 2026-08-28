@@ -10,7 +10,13 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP);
 }
 
-export function Landing({ onTryDemo }: { onTryDemo: () => void }) {
+export function Landing({
+  onTryDemo,
+  isExiting,
+}: {
+  onTryDemo: () => void;
+  isExiting?: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -39,9 +45,10 @@ export function Landing({ onTryDemo }: { onTryDemo: () => void }) {
         delay: 0.8,
       });
 
-      // CTAs fade in after subhead
+      // CTAs slide up — NO opacity animation (avoids the invisible-button bug)
+      // gsap.from with opacity:0 + delay sets opacity:0 immediately and waits;
+      // if the animation is interrupted the buttons stay invisible forever.
       gsap.from(".hero-cta", {
-        opacity: 0,
         y: 12,
         duration: 0.5,
         ease: "power2.out",
@@ -75,7 +82,15 @@ export function Landing({ onTryDemo }: { onTryDemo: () => void }) {
   const headlineAccent = ["and", "catches", "conflicts", "before", "they", "escalate."];
 
   return (
-    <div ref={containerRef} className="relative border-b border-border bg-background overflow-hidden">
+    <div
+      ref={containerRef}
+      className="relative border-b border-border bg-background overflow-hidden"
+      style={{
+        transform: isExiting ? "translateY(-100%)" : "translateY(0)",
+        opacity: isExiting ? 0 : 1,
+        transition: "transform 350ms cubic-bezier(0.83, 0, 0.17, 1), opacity 300ms ease-out",
+      }}
+    >
       {/* Background glow — Neon green radial, fits "Server Room After Dark" */}
       <div
         className="hero-glow pointer-events-none absolute left-1/2 top-0 h-[400px] w-[600px] -translate-x-1/2 opacity-5"
