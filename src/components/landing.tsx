@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import { Brain, ArrowRight, Activity, GitBranch, MessageSquare } from "lucide-react";
+import { Brain, ArrowRight, Activity, GitBranch, MessageSquare, Play, X } from "lucide-react";
 
 // Register once at module top level — guarded for SSR (useGSAP touches window)
 if (typeof window !== "undefined") {
@@ -18,6 +18,7 @@ export function Landing({
   isExiting?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [showVideo, setShowVideo] = useState(false);
 
   useGSAP(
     () => {
@@ -145,17 +146,16 @@ export function Landing({
               onClick={onTryDemo}
               className="hero-cta flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
-              Try the demo
+              Connect your community
               <ArrowRight className="h-4 w-4" />
             </button>
-            <a
-              href="https://github.com/DruxAMB/sentinel"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => setShowVideo(true)}
               className="hero-cta flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-card"
             >
-              View the code
-            </a>
+              <Play className="h-4 w-4" />
+              Watch demo
+            </button>
           </div>
         </div>
       </section>
@@ -224,6 +224,39 @@ export function Landing({
           </p>
         </div>
       </section>
+
+      {/* Video modal */}
+      {showVideo && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
+          onClick={() => setShowVideo(false)}
+        >
+          <div
+            className="relative w-full max-w-3xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-border p-4">
+              <span className="text-sm font-medium text-foreground">Sentinel — Demo</span>
+              <button
+                onClick={() => setShowVideo(false)}
+                className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="aspect-video w-full">
+              <iframe
+                src="https://www.youtube.com/embed/MmStYCWO9-8?autoplay=1"
+                title="Sentinel Demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
