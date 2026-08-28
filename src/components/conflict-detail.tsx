@@ -70,12 +70,32 @@ function formatDaysAgo(daysAgo: number): string {
   return `${Math.floor(daysAgo / 7)} weeks ago`;
 }
 
+function GenderIcon({ gender, size }: { gender: "male" | "female"; size: number }) {
+  if (gender === "male") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="relative z-10 drop-shadow-sm">
+        <circle cx="10" cy="14" r="6" />
+        <path d="M14.5 10.5 20 5" />
+        <path d="M15 5h5v5" />
+      </svg>
+    );
+  }
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="relative z-10 drop-shadow-sm">
+      <circle cx="12" cy="9" r="6" />
+      <path d="M12 15v7" />
+      <path d="M9 19h6" />
+    </svg>
+  );
+}
+
 function Avatar({ member, size = "sm" }: { member: Member; size?: "sm" | "md" | "lg" }) {
-  const dims = size === "sm" ? "h-8 w-8 text-xs" : size === "md" ? "h-10 w-10 text-sm" : "h-12 w-12 text-base";
+  const dims = size === "sm" ? "h-8 w-8" : size === "md" ? "h-10 w-10" : "h-12 w-12";
+  const iconSize = size === "sm" ? 16 : size === "md" ? 20 : 24;
   const color = member.avatarColor;
   return (
     <div
-      className={`${dims} flex shrink-0 items-center justify-center rounded-full font-medium text-white relative overflow-hidden`}
+      className={`${dims} flex shrink-0 items-center justify-center rounded-full text-white relative overflow-hidden`}
       style={{
         background: `radial-gradient(circle at 30% 25%, ${color}ee 0%, ${color} 40%, ${color}99 100%)`,
         boxShadow: `0 2px 8px ${color}40, inset 0 1px 2px rgba(255,255,255,0.25), inset 0 -2px 4px rgba(0,0,0,0.3)`,
@@ -87,7 +107,7 @@ function Avatar({ member, size = "sm" }: { member: Member; size?: "sm" | "md" | 
           background: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35) 0%, transparent 50%)",
         }}
       />
-      <span className="relative z-10 drop-shadow-sm">{member.name.trim().charAt(0)}</span>
+      <GenderIcon gender={member.gender} size={iconSize} />
     </div>
   );
 }

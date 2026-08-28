@@ -7,6 +7,7 @@ export interface Member {
   name: string;
   handle: string;
   avatarColor: string; // hex color for 3D orb avatar
+  gender: "male" | "female";
   joinedDaysAgo: number;
   role: "member" | "moderator" | "regular";
 }
