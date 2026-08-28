@@ -15,6 +15,8 @@ import {
   Lightbulb,
   GitBranch,
   Loader2,
+  Mars,
+  Venus,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -71,22 +73,8 @@ function formatDaysAgo(daysAgo: number): string {
 }
 
 function GenderIcon({ gender, size }: { gender: "male" | "female"; size: number }) {
-  if (gender === "male") {
-    return (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="relative z-10 drop-shadow-sm">
-        <circle cx="10" cy="14" r="6" />
-        <path d="M14.5 10.5 20 5" />
-        <path d="M15 5h5v5" />
-      </svg>
-    );
-  }
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="relative z-10 drop-shadow-sm">
-      <circle cx="12" cy="9" r="6" />
-      <path d="M12 15v7" />
-      <path d="M9 19h6" />
-    </svg>
-  );
+  const Icon = gender === "male" ? Mars : Venus;
+  return <Icon size={size} className="relative z-10 drop-shadow-sm" strokeWidth={2} />;
 }
 
 function Avatar({ member, size = "sm" }: { member: Member; size?: "sm" | "md" | "lg" }) {
