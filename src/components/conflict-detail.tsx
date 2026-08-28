@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   Brain,
   MessageSquare,
-  Send,
   History,
   ArrowRight,
   Lightbulb,
@@ -17,6 +16,9 @@ import {
   Loader2,
   Mars,
   Venus,
+  Copy,
+  ClipboardCheck,
+  RefreshCw,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -259,10 +261,13 @@ function SeededSessionLog({ sessions }: { sessions: MonitoringSession[] }) {
 
 export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<"timeline" | "sessions" | "intervention">("timeline");
-  const [interventionSent, setInterventionSent] = useState(false);
+  const [interventionCopied, setInterventionCopied] = useState(false);
   const [realSessions, setRealSessions] = useState<RealSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionsSource, setSessionsSource] = useState<"live" | "seeded">("seeded");
+  const [newSessionLoading, setNewSessionLoading] = useState(false);
+  const [newSessionResult, setNewSessionResult] = useState<string | null>(null);
+  const [newSessionError, setNewSessionError] = useState<string | null>(null);
 
   // Fetch real Mind sessions on mount
   useEffect(() => {
@@ -448,23 +453,81 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
 
           {activeTab === "sessions" && (
             <div>
-              <div className="mb-4 flex items-center gap-2">
-                <History className="h-4 w-4 text-muted-foreground" />
-                {sessionsLoading ? (
-                  <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    Loading Mind sessions...
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  </span>
-                ) : sessionsSource === "live" ? (
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {realSessions.length} monitoring runs from the live Mind
-                  </span>
-                ) : (
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {seededSessions.length} monitoring runs over {conflict.firstDetectedDaysAgo} days
-                  </span>
-                )}
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-muted-foreground" />
+                  {sessionsLoading ? (
+                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      Loading Mind sessions...
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    </span>
+                  ) : sessionsSource === "live" ? (
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {realSessions.length} monitoring runs from the live Mind
+                    </span>
+                  ) : (
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {seededSessions.length} monitoring runs over {conflict.firstDetectedDaysAgo} days
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={async () => {
+                    setNewSessionLoading(true);
+                    setNewSessionError(null);
+                    setNewSessionResult(null);
+                    try {
+                      const res = await fetch("/api/monitor", { method: "POST" });
+                      const data = await res.json();
+                      if (data.success) {
+                        setNewSessionResult(data.assessment || "Session completed.");
+                        // Refresh sessions
+                        const historyRes = await fetch("/api/monitor");
+                        const historyData = await historyRes.json();
+                        if (historyData.success && historyData.sessions?.length > 0) {
+                          setRealSessions(historyData.sessions);
+                          setSessionsSource("live");
+                        }
+                      } else {
+                        setNewSessionError(data.error || "Session failed.");
+                      }
+                    } catch {
+                      setNewSessionError("Network error. The Mind may be slow to respond.");
+                    } finally {
+                      setNewSessionLoading(false);
+                    }
+                  }}
+                  disabled={newSessionLoading}
+                  className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                >
+                  {newSessionLoading ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Mind is thinking...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      Run new session
+                    </>
+                  )}
+                </button>
               </div>
+              {newSessionError && (
+                <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+                  <p className="text-xs text-amber-500">{newSessionError}</p>
+                </div>
+              )}
+              {newSessionResult && (
+                <div className="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-4">
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">New session result</span>
+                    <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-medium text-primary">LIVE</span>
+                  </div>
+                  <p className="mt-2 text-sm text-foreground leading-relaxed whitespace-pre-wrap">{newSessionResult}</p>
+                </div>
+              )}
               {sessionsLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -499,25 +562,30 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                {!interventionSent ? (
-                  <>
-                    <button
-                      onClick={() => setInterventionSent(true)}
-                      className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-                    >
-                      <Send className="h-4 w-4" />
-                      Send to #feedback
-                    </button>
-                    <button className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors">
-                      Edit message
-                    </button>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-primary">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Intervention sent to #feedback</span>
-                  </div>
-                )}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(interventionText).then(() => {
+                      setInterventionCopied(true);
+                      setTimeout(() => setInterventionCopied(false), 2000);
+                    });
+                  }}
+                  className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  {interventionCopied ? (
+                    <>
+                      <ClipboardCheck className="h-4 w-4" />
+                      Copied to clipboard
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      Copy message
+                    </>
+                  )}
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  Paste into your community channel when ready
+                </span>
               </div>
               <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
                 <p className="text-xs text-amber-500">

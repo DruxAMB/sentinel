@@ -15,7 +15,7 @@
 
 **[0:10 — 0:20] Enter the dashboard**
 
-*Click "Try the demo". The page scrolls down to the dashboard.*
+*Click "Try the demo". The landing wipes away and the dashboard renders.*
 
 > "This is the Pixel Forge community — a Discord-style pixel art creator community. On the left is the community feed. On the right is the Conflict Watch panel."
 
@@ -47,9 +47,15 @@
 
 *Click the 'Intervention' tab.*
 
-> "And here's the autonomous action — the Mind drafted a full de-escalation message, ready to post with one click. It named the dynamic, addressed both members specifically, suggested a reset period, and even included meta-notes on why it structured the message that way. This is a Mind that doesn't just detect conflicts — it remembers them, reasons about them, and acts on them."
+> "And here's the autonomous action — the Mind drafted a full de-escalation message. Copy it to your clipboard and paste it into your community channel when you're ready. The Mind named the dynamic, addressed both members specifically, suggested a reset period, and even included meta-notes on why it structured the message that way. This is a Mind that doesn't just detect conflicts — it remembers them, reasons about them, and acts on them."
 
-*Point to the drafted message and the 'Send to #feedback' button.*
+*Point to the drafted message and the 'Copy message' button. Click it to show the clipboard confirmation.*
+
+**[Optional — if time allows] Run a live session**
+
+*Click the 'Run new session' button on the Mind Sessions tab.*
+
+> "And this isn't a recording — I can trigger a live monitoring session right now. The Mind will read the latest community messages and give us a fresh assessment. It takes about a minute, but you're watching a persistent Mind do real reasoning in real-time."
 
 ## Key points to emphasize
 
@@ -58,6 +64,12 @@
 3. **The Mind has personality** — it pushed back on being told what to say, refused to use templates, and gave honest assessments
 4. **The intervention is autonomous** — the Mind drafted it without being given a template, and included meta-reasoning about its own draft
 5. **The pattern match is the money shot** — "this trajectory ended in a ban last time, and we're on the same path"
+6. **The Mind has a Skill** — it's equipped with "Kith" from the Minds Bazaar, which gives it the community-member memory framework. This isn't just a prompt — it's a Mind with installed capabilities.
+7. **It's viable** — one Mind per community, cognition credits are the unit cost, and the Mind's value compounds with every session because its memory grows. A creator community that runs Sentinel for 3 months has a Mind that's seen multiple conflict cycles — a new tool can't replicate that.
+
+## Closing line (last 10 seconds)
+
+> "Sentinel catches conflicts before they escalate — and the Mind that powers it gets smarter every day, because it remembers. That's not a feature. That's the product."
 
 ## What to avoid saying
 

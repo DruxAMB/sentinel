@@ -80,6 +80,14 @@ src/
 
 The Mind is integrated via `@animocabrands/minds-client-lib`. The monitoring conversation uses a stable alias (`sentinel-monitoring-pixel-forge`) so the Mind remembers across sessions. Each monitoring run sends recent community messages to the Mind, which replies with its assessment. The full conversation history is retrieved and displayed as the session log.
 
+### Equipped Skills
+
+The Mind has three skills equipped:
+
+1. **Kith** (from the [Minds Bazaar](https://build.hellominds.ai)) — "Remembers every member of your community and tells you what you can't see anymore — who's quietly burning out, who arrived and got no reply. Reasons against each person's own baseline, never a global threshold." This skill gives the Mind the community-member memory framework that Sentinel's monitoring protocol builds on.
+2. **Mastermind Companion** (built-in) — daily companion routine for the Mastermind archetype.
+3. **Mastermind Dormancy Resync** (built-in) — bridges context gaps after dormancy periods.
+
 ### What's real vs. simulated
 
 - **Real:** The Mind's assessments, session history, pattern detection, and drafted intervention. These are live outputs from the Minds API, displayed via `GET /api/monitor`.
@@ -109,6 +117,21 @@ npm run build
 | `MINDS_BUILDER_API_KEY` | Builder API key from build.hellominds.ai | Yes |
 | `MINDS_MIND_ID` | Your Mind's UUID | Yes |
 | `CRON_SECRET` | Secret for Vercel Cron auth (optional — if unset, cron runs without auth) | No |
+
+## Viability & scalability
+
+**Who uses this:** Community managers and moderators of creator-economy platforms — Discord servers, Slack workspaces, Telegram groups, and forums where creative professionals collaborate. These communities range from 50 to 5,000 members and typically have 1-3 human moderators who can't read every message.
+
+**The problem today:** Moderation is reactive. A human has to see the conflict, recognize the pattern, and decide to act — usually after someone reports it. By then, the damage is done: members have left, trust has eroded, and the intervention comes too late to prevent the ban that nobody wanted.
+
+**How Sentinel scales:**
+
+1. **One Mind per community.** Each community gets its own monitoring conversation alias. The Mind builds memory of that community's specific dynamics — who clashes with whom, what topics trigger escalation, what intervention tone works.
+2. **Platform integration path.** The current build uses seeded data. The production path connects to a community platform's API (Discord Bot API, Slack Events API, Telegram Bot API) to read messages in real-time. The Mind's monitoring prompt stays the same — only the message source changes.
+3. **Cognition economics.** Each monitoring session costs ~2-5 cognition credits. At the current balance (~182 credits), that's ~36-91 sessions — roughly 6-15 days of monitoring at 6-hour intervals. At scale, a community manager pays for cognition credits the way they'd pay for any SaaS tool.
+4. **Compounding value.** The Mind's value increases over time. A Mind that has monitored a community for 3 months has seen multiple conflict cycles and can pattern-match current tensions against a rich history. This is the moat — a new tool can't replicate 3 months of conversational memory on day one.
+
+**Why this compounds for creators:** Creator communities live and die on retention. A single unresolved conflict can cause 5-10% of a community to leave. Sentinel catches conflicts before they reach that point — the Mind's early intervention costs 2 cognition credits and saves the community manager a week of damage control.
 
 ## License
 
