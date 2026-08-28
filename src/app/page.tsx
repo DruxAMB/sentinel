@@ -53,11 +53,11 @@ function Avatar({ member, size = "sm" }: { member: Member; size?: "sm" | "md" })
   const dims = size === "sm" ? "h-8 w-8" : "h-10 w-10";
   const color = member.avatarColor;
   const [imgError, setImgError] = useState(false);
-  const seed = member.name.trim();
-  const dicebearUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=000000,000000&backgroundType=gradient`;
+  const iconUrl = member.gender === "male"
+    ? "https://img.icons8.com/3d-fluent/96/person-male.png"
+    : "https://img.icons8.com/3d-fluent/96/person-female.png";
 
   if (imgError) {
-    // Fallback to 3D orb with gender icon
     const iconSize = size === "sm" ? 16 : 20;
     const Icon = member.gender === "male" ? Mars : Venus;
     return (
@@ -81,14 +81,15 @@ function Avatar({ member, size = "sm" }: { member: Member; size?: "sm" | "md" })
 
   return (
     <div
-      className={`${dims} shrink-0 rounded-full relative overflow-hidden`}
+      className={`${dims} shrink-0 rounded-full relative overflow-hidden flex items-center justify-center`}
       style={{
+        background: `radial-gradient(circle at 30% 25%, ${color}22 0%, ${color}11 100%)`,
         boxShadow: `0 2px 8px ${color}40, inset 0 1px 2px rgba(255,255,255,0.15)`,
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={dicebearUrl}
+        src={iconUrl}
         alt={member.name}
         className="h-full w-full object-cover"
         onError={() => setImgError(true)}
