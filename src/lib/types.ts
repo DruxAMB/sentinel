@@ -6,7 +6,7 @@ export interface Member {
   id: string;
   name: string;
   handle: string;
-  avatarColor: string; // tailwind bg-* class for seeded avatar
+  avatarColor: string; // hex color for 3D orb avatar
   joinedDaysAgo: number;
   role: "member" | "moderator" | "regular";
 }

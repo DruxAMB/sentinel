@@ -51,11 +51,23 @@ function formatDaysAgo(daysAgo: number): string {
 
 function Avatar({ member, size = "sm" }: { member: Member; size?: "sm" | "md" }) {
   const dims = size === "sm" ? "h-8 w-8 text-xs" : "h-10 w-10 text-sm";
+  const color = member.avatarColor;
   return (
     <div
-      className={`${member.avatarColor} ${dims} flex shrink-0 items-center justify-center rounded-full font-medium text-white`}
+      className={`${dims} flex shrink-0 items-center justify-center rounded-full font-medium text-white relative overflow-hidden`}
+      style={{
+        background: `radial-gradient(circle at 30% 25%, ${color}ee 0%, ${color} 40%, ${color}99 100%)`,
+        boxShadow: `0 2px 8px ${color}40, inset 0 1px 2px rgba(255,255,255,0.25), inset 0 -2px 4px rgba(0,0,0,0.3)`,
+      }}
     >
-      {member.name.charAt(0)}
+      {/* Glossy highlight — top-left light source */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35) 0%, transparent 50%)",
+        }}
+      />
+      <span className="relative z-10 drop-shadow-sm">{member.name.trim().charAt(0)}</span>
     </div>
   );
 }
