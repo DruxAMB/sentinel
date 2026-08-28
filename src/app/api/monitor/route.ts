@@ -27,7 +27,19 @@ export async function POST(request: NextRequest) {
       }, { status: 429 });
     }
 
-    const recentMessages = communityData.messages
+    // Check if the request body contains live community messages
+    let liveMessages: Array<{ author: string; content: string; channel: string; timestamp: string }> | null = null;
+    try {
+      const body = await request.json();
+      if (body.messages && Array.isArray(body.messages) && body.messages.length > 0) {
+        liveMessages = body.messages;
+      }
+    } catch {
+      // No body or invalid JSON — use seeded data (cron path)
+    }
+
+    // Use live messages if provided, otherwise fall back to seeded data
+    const recentMessages = liveMessages || communityData.messages
       .filter((m) => m.daysAgo <= 3)
       .map((m) => {
         const author = communityData.members.find((mem) => mem.id === m.authorId);
@@ -48,6 +60,7 @@ export async function POST(request: NextRequest) {
       balance,
       messagesAnalyzed: recentMessages.length,
       timestamp: new Date().toISOString(),
+      source: liveMessages ? "live" : "seeded",
     });
   } catch (error) {
     console.error("Monitoring session failed:", error);

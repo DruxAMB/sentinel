@@ -2,10 +2,11 @@
 
 import { communityData } from "@/lib/seed-data";
 import type { Message, Member, Tone, ConflictWatch } from "@/lib/types";
-import { Shield, Activity, AlertTriangle, Eye, CheckCircle2, Clock, ArrowLeft, Mars, Venus } from "lucide-react";
+import { Shield, Activity, AlertTriangle, Eye, CheckCircle2, Clock, ArrowLeft, Mars, Venus, MessageCircle, Hash } from "lucide-react";
 import { useState } from "react";
 import { ConflictDetail } from "@/components/conflict-detail";
 import { Landing } from "@/components/landing";
+import { ConnectFlow } from "@/components/connect-flow";
 
 const toneColors: Record<Tone, string> = {
   neutral: "text-muted-foreground",
@@ -174,10 +175,64 @@ function ConflictCard({ conflict, onClick }: { conflict: ConflictWatch; onClick:
   );
 }
 
+function LiveMessageRow({ message }: { message: { author: string; authorId: string; content: string; timestamp: string } }) {
+  const time = new Date(message.timestamp).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  // Generate a consistent color from the author name
+  const colorHash = message.author.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const colors = ["#3b82f6", "#a855f7", "#22c55e", "#f97316", "#ec4899", "#14b8a6", "#6366f1", "#f87171", "#eab308", "#06b6d4"];
+  const color = colors[colorHash % colors.length];
+  const avatarImg = (colorHash % 70) + 1;
+
+  return (
+    <div className="flex items-start gap-3 px-4 py-3 border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors">
+      <div
+        className="h-8 w-8 shrink-0 rounded-full overflow-hidden"
+        style={{ boxShadow: `0 1px 4px ${color}40` }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`https://i.pravatar.cc/150?img=${avatarImg}`}
+          alt={message.author}
+          className="h-full w-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
+        />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2">
+          <span className="text-sm font-medium text-foreground">{message.author}</span>
+          <span className="text-xs text-muted-foreground">{time}</span>
+        </div>
+        <p className="text-sm text-muted-foreground mt-0.5">{message.content}</p>
+      </div>
+    </div>
+  );
+}
+
+interface ConnectedCommunity {
+  platform: "telegram" | "slack";
+  communityName: string;
+  memberCount: number;
+  messages: Array<{
+    messageId: string;
+    author: string;
+    authorId: string;
+    content: string;
+    timestamp: string;
+  }>;
+}
+
 export default function Home() {
   const [selectedConflict, setSelectedConflict] = useState<ConflictWatch | null>(null);
-  const [view, setView] = useState<"landing" | "demo">("landing");
+  const [view, setView] = useState<"landing" | "connect" | "demo">("landing");
   const [isExiting, setIsExiting] = useState(false);
+  const [connectedCommunity, setConnectedCommunity] = useState<ConnectedCommunity | null>(null);
   const recentMessages = [...communityData.messages].sort((a, b) => a.daysAgo - b.daysAgo).slice(0, 15);
   const activeConflicts = communityData.conflicts.filter((c) => c.status === "active");
   const monitoringConflicts = communityData.conflicts.filter((c) => c.status === "monitoring");
@@ -186,8 +241,7 @@ export default function Home() {
 
   const handleTryDemo = () => {
     setIsExiting(true);
-    // Wait for the landing wipe-out transition (350ms) then swap views
-    setTimeout(() => setView("demo"), 350);
+    setTimeout(() => setView("connect"), 350);
   };
 
   const handleBack = () => {
@@ -195,9 +249,24 @@ export default function Home() {
     setIsExiting(false);
   };
 
+  const handleConnected = (community: ConnectedCommunity) => {
+    setConnectedCommunity(community);
+    setView("demo");
+  };
+
   if (view === "landing") {
     return <Landing onTryDemo={handleTryDemo} isExiting={isExiting} />;
   }
+
+  if (view === "connect") {
+    return <ConnectFlow onConnected={handleConnected} onBack={handleBack} />;
+  }
+
+  // Dashboard — uses connected community data if available, seeded data as fallback
+  const displayName = connectedCommunity?.communityName || communityData.communityName;
+  const displayMembers = connectedCommunity?.memberCount || communityData.members.length;
+  const platformIcon = connectedCommunity?.platform === "telegram" ? MessageCircle : connectedCommunity?.platform === "slack" ? Hash : null;
+  const isLive = !!connectedCommunity;
 
   return (
     <div
@@ -212,7 +281,13 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
             <span className="font-semibold text-lg">Sentinel</span>
-            <span className="text-muted-foreground text-sm">· {communityData.communityName}</span>
+            <span className="text-muted-foreground text-sm">· {displayName}</span>
+            {isLive && platformIcon && (
+              <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                {(() => { const Icon = platformIcon; return <Icon className="h-3 w-3" />; })()}
+                LIVE
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 text-sm">
@@ -221,7 +296,7 @@ export default function Home() {
               <span className="font-medium text-primary">monitoring</span>
             </div>
             <div className="text-sm text-muted-foreground">
-              {communityData.members.length} members
+              {displayMembers} members
             </div>
             <button
               onClick={handleBack}
@@ -241,16 +316,31 @@ export default function Home() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Community Feed</h2>
-              <div className="flex gap-2 text-xs">
-                <span className="rounded-md bg-muted px-2 py-1 text-muted-foreground">#feedback</span>
-                <span className="rounded-md bg-muted px-2 py-1 text-muted-foreground">#general</span>
+              {isLive ? (
+                <span className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                  {(() => { const Icon = platformIcon; return Icon ? <Icon className="h-3 w-3" /> : null; })()}
+                  {connectedCommunity?.platform === "telegram" ? "Telegram" : "Slack"} · {connectedCommunity?.messages.length || 0} messages
+                </span>
+              ) : (
+                <div className="flex gap-2 text-xs">
+                  <span className="rounded-md bg-muted px-2 py-1 text-muted-foreground">#feedback</span>
+                  <span className="rounded-md bg-muted px-2 py-1 text-muted-foreground">#general</span>
+                </div>
+              )}
+            </div>
+            {isLive && connectedCommunity ? (
+              <div className="space-y-1 rounded-xl border border-border bg-card">
+                {connectedCommunity.messages.map((msg) => (
+                  <LiveMessageRow key={msg.messageId} message={msg} />
+                ))}
               </div>
-            </div>
-            <div className="space-y-1 rounded-xl border border-border bg-card">
-              {recentMessages.map((msg) => (
-                <MessageRow key={msg.id} message={msg} />
-              ))}
-            </div>
+            ) : (
+              <div className="space-y-1 rounded-xl border border-border bg-card">
+                {recentMessages.map((msg) => (
+                  <MessageRow key={msg.id} message={msg} />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right: Conflict Watch panel */}
@@ -315,6 +405,7 @@ export default function Home() {
         <ConflictDetail
           conflict={selectedConflict}
           onClose={() => setSelectedConflict(null)}
+          liveMessages={connectedCommunity?.messages}
         />
       )}
     </div>

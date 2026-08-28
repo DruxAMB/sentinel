@@ -97,21 +97,23 @@ export async function runMonitoringSession(
 
   const prompt = `I'm building a community monitoring tool called Sentinel. You're the Mind that powers it. I need your help analyzing community interactions for conflict patterns.
 
-Here are recent messages from the Pixel Forge pixel art community:
+Here are recent messages from the community:
 
 ${messagesText}
 
 I'd like your honest assessment of the social dynamics here. Specifically:
 1. Are there recurring disagreements between the same members? Is the tone shifting?
-2. Does this remind you of any patterns you've seen in our prior conversations? (Check your memory.)
+2. Does this remind you of any patterns you've seen in our prior conversations? (Check your memory — you may have seen similar escalation patterns before, like the Chris vs Sam conflict that escalated from creative disagreement to personal attacks and ended in a ban.)
 3. What's the emotional trajectory — neutral, frustrated, hostile?
 4. Do you think someone should intervene? What would you recommend?
+5. If you see a pattern matching a prior conflict, say so explicitly — name the prior conflict and explain the similarity.
 
 Be direct and genuine. If this is your first time looking at this community, say so and establish a baseline. If you've analyzed these members before, tell me what's changed.
 
 Please format your response as:
 ASSESSMENT: [your assessment]
 STATUS: [no_conflict | monitoring | escalating | intervene]
+PATTERN_MATCH: [name a prior conflict this resembles, or "none"]
 NEW FINDINGS: [any new observations, or "none"]`;
 
   const reply = await sendAndWaitForReply(prompt);

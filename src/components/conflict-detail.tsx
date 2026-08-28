@@ -259,7 +259,7 @@ function SeededSessionLog({ sessions }: { sessions: MonitoringSession[] }) {
   );
 }
 
-export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch; onClose: () => void }) {
+export function ConflictDetail({ conflict, onClose, liveMessages }: { conflict: ConflictWatch; onClose: () => void; liveMessages?: Array<{ author: string; content: string; timestamp: string }> }) {
   const [activeTab, setActiveTab] = useState<"timeline" | "sessions" | "intervention">("timeline");
   const [interventionCopied, setInterventionCopied] = useState(false);
   const [realSessions, setRealSessions] = useState<RealSession[]>([]);
@@ -477,7 +477,18 @@ export function ConflictDetail({ conflict, onClose }: { conflict: ConflictWatch;
                     setNewSessionError(null);
                     setNewSessionResult(null);
                     try {
-                      const res = await fetch("/api/monitor", { method: "POST" });
+                      const res = await fetch("/api/monitor", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          messages: liveMessages?.map((m) => ({
+                            author: m.author,
+                            content: m.content,
+                            channel: "live",
+                            timestamp: m.timestamp,
+                          })),
+                        }),
+                      });
                       const data = await res.json();
                       if (data.success) {
                         setNewSessionResult(data.assessment || "Session completed.");
