@@ -72,30 +72,49 @@ function formatDaysAgo(daysAgo: number): string {
   return `${Math.floor(daysAgo / 7)} weeks ago`;
 }
 
-function GenderIcon({ gender, size }: { gender: "male" | "female"; size: number }) {
-  const Icon = gender === "male" ? Mars : Venus;
-  return <Icon size={size} className="relative z-10 drop-shadow-sm" strokeWidth={2} />;
-}
-
 function Avatar({ member, size = "sm" }: { member: Member; size?: "sm" | "md" | "lg" }) {
   const dims = size === "sm" ? "h-8 w-8" : size === "md" ? "h-10 w-10" : "h-12 w-12";
-  const iconSize = size === "sm" ? 16 : size === "md" ? 20 : 24;
   const color = member.avatarColor;
+  const [imgError, setImgError] = useState(false);
+  const seed = member.name.trim();
+  const dicebearUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=000000,000000&backgroundType=gradient`;
+
+  if (imgError) {
+    const iconSize = size === "sm" ? 16 : size === "md" ? 20 : 24;
+    const Icon = member.gender === "male" ? Mars : Venus;
+    return (
+      <div
+        className={`${dims} flex shrink-0 items-center justify-center rounded-full text-white relative overflow-hidden`}
+        style={{
+          background: `radial-gradient(circle at 30% 25%, ${color}ee 0%, ${color} 40%, ${color}99 100%)`,
+          boxShadow: `0 2px 8px ${color}40, inset 0 1px 2px rgba(255,255,255,0.25), inset 0 -2px 4px rgba(0,0,0,0.3)`,
+        }}
+      >
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35) 0%, transparent 50%)",
+          }}
+        />
+        <Icon size={iconSize} className="relative z-10 drop-shadow-sm" strokeWidth={2} />
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`${dims} flex shrink-0 items-center justify-center rounded-full text-white relative overflow-hidden`}
+      className={`${dims} shrink-0 rounded-full relative overflow-hidden`}
       style={{
-        background: `radial-gradient(circle at 30% 25%, ${color}ee 0%, ${color} 40%, ${color}99 100%)`,
-        boxShadow: `0 2px 8px ${color}40, inset 0 1px 2px rgba(255,255,255,0.25), inset 0 -2px 4px rgba(0,0,0,0.3)`,
+        boxShadow: `0 2px 8px ${color}40, inset 0 1px 2px rgba(255,255,255,0.15)`,
       }}
     >
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35) 0%, transparent 50%)",
-        }}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={dicebearUrl}
+        alt={member.name}
+        className="h-full w-full object-cover"
+        onError={() => setImgError(true)}
       />
-      <GenderIcon gender={member.gender} size={iconSize} />
     </div>
   );
 }
